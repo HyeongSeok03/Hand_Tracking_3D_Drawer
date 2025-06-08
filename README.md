@@ -105,14 +105,16 @@ ret, rvec, tvec, inliers = cv.solvePnPRansac(
 ~~~
 -----------------------
 ### 핀치 상태를 어떻게 안정적으로 감지할 것인가
-1. 최초에 핀치 상태는 검지와 엄지 사이 거리를 재고 이것이 threshold보다 낮으면 핀치 상태로 판정하였음. 동일한 핀치 상황이라 하더라도 손이 가까우면 검지와 엄지 사이 거리는 멀어지기 때문에 이것을 보정하는 것이 필요했음. 핀치 상태일때 False로 바뀌는 경우가 잦은 문제도 존재하였음.
+1. 최초에는 검지와 엄지 사이 거리를 재고 이것이 threshold보다 낮으면 핀치 상태로 판정하였음. 동일한 핀치 상황이라 하더라도 손이 가까우면 검지와 엄지 사이 거리는 멀어지기 때문에 이것을 보정하는 것이 필요했음. 핀치 상태일때 False로 바뀌는 경우가 잦은 문제도 존재하였음.
 2. 위의 손 좌표 정규화를 이용하여 보정을 성공하였음. 하지만 여전히 핀치상태일 경우에 노이즈(True와 False 간 진동)가 심한 문제가 존재하였음.
 3. Hysterisis Thresholding 기법을 이용하여 노이즈를 해결하였음. t_high와 t_low를 나누고 t_low보다 낮으면 pinch on, t_high보다 높으면 pinch off, 그 외에는 이전 상태를 유지하는 것으로 구현하였음.
+4. 그럼에도 가끔 오인식으로 False가 뜨는데 이것에 의해 선분이 그려지다 끊기는 것은 치명적이었음. 그래서 이전 핀치 상태들을 기록하는 pinch_history 변수를 이용하여 3번 연속으로 핀치가 False가 될때만 False로 바뀌게 하였음.
 ~~~
 # threshold를 high와 low로 나눔
 t_low = 0.15
 t_high = 0.2
 is_pinch = False
+pinch_history = np.zeros(3, dtype=bool)
 
 while True:
   valid, img = cap.read()
@@ -128,6 +130,13 @@ while True:
         is_pinch = True
     elif d_norm_pinch > t_high:
         is_pinch = False
+
+    # 일종의 큐연산 맨 앞은 나가고 뒤에 현재 핀치 상태 넣음
+    pinch_history[:1] = pinch_history[:1]
+    pinch_history[-1] = is_pinch
+
+    # pinch_history 중 뭐 하나라도 True이면 True가 들어감 -> 모두 False이어야 False가 들어감
+    is_pinch = np.any(pinch_history)
 ~~~
 
 ## 참고 사항
