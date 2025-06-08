@@ -112,6 +112,8 @@ ret, rvec, tvec, inliers = cv.solvePnPRansac(
 2. 위의 손 좌표 정규화를 이용하여 보정을 성공하였음. 하지만 여전히 핀치상태일 경우에 노이즈(True와 False 간 진동)가 심한 문제가 존재하였음.
 3. Hysterisis Thresholding 기법을 이용하여 노이즈를 해결하였음. t_high와 t_low를 나누고 t_low보다 낮으면 pinch on, t_high보다 높으면 pinch off, 그 외에는 이전 상태를 유지하는 것으로 구현하였음.
 4. 그럼에도 가끔 오인식으로 False가 뜨는데 이것에 의해 선분이 그려지다 끊기는 것은 치명적이었음. 그래서 이전 핀치 상태들을 기록하는 pinch_history 변수를 이용하여 3번 연속으로 핀치가 False가 될때만 False로 바뀌게 하였음.
+
+- [2번, 3번, 4번에 대한 성능 차이를 보여주는 유튜브 영상](https://youtu.be/_zeAfWMn2BQ)
 ~~~
 # threshold를 high와 low로 나눔
 t_low = 0.15
